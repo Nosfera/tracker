@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Price Tracker</title>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js"></script>
+</head>
+<body>
+  <h1>Price Tracker</h1>
+  <button id="googleSignIn">Sign in with Google</button>
+  <div id="dashboard" style="display: none;">
+    <h2>Your Tracked Products</h2>
+    <ul id="productList"></ul>
+  </div>
+
+  <script src=".././src/firebase.js"></script>
+  <script>
+    const provider = new firebase.auth.GoogleAuthProvider();
+
+    document.getElementById('googleSignIn').onclick = () => {
+      firebase.auth().signInWithPopup(provider)
+        .then((result) => {
+          console.log("User signed in:", result.user);
+          document.getElementById('dashboard').style.display = 'block';
+          loadUserData(result.user.uid);
+        })
+        .catch((error) => {
+          console.error("Sign-in error:", error.message);
+        });
+    };
+
+    function loadUserData(userId) {
+      fetch(`/api/prices/products`, { headers: { Authorization: userId } })
+        .then(res => res.json())
+        .then(data => console.log("User data loaded:", data))
+        .catch(error => console.error("Data load error:", error.message));
+    }
+  </script>
+</body>
+</html>
