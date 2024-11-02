@@ -5,6 +5,8 @@
   <title>Price Tracker</title>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <h1>Price Tracker</h1>
@@ -12,14 +14,27 @@
   <div id="dashboard" style="display: none;">
     <h2>Your Tracked Products</h2>
     <ul id="productList"></ul>
+    <canvas id="priceChart" width="400" height="200"></canvas>
   </div>
 
-  <script src=".././src/firebase.js"></script>
   <script>
-    const provider = new firebase.auth.GoogleAuthProvider();
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "YOUR_FIREBASE_API_KEY",
+      authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
+      projectId: "YOUR_FIREBASE_PROJECT_ID",
+      storageBucket: "YOUR_FIREBASE_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_FIREBASE_MESSAGING_SENDER_ID",
+      appId: "YOUR_FIREBASE_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
     document.getElementById('googleSignIn').onclick = () => {
-      firebase.auth().signInWithPopup(provider)
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
         .then((result) => {
           console.log("User signed in:", result.user);
           document.getElementById('dashboard').style.display = 'block';
@@ -30,11 +45,45 @@
         });
     };
 
-    function loadUserData(userId) {
-      fetch(`/api/prices/products`, { headers: { Authorization: userId } })
-        .then(res => res.json())
-        .then(data => console.log("User data loaded:", data))
-        .catch(error => console.error("Data load error:", error.message));
+    async function loadUserData(userId) {
+      const productList = document.getElementById('productList');
+      productList.innerHTML = "";
+
+      // Fetch tracked products from Firestore
+      const productsRef = db.collection(`users/${userId}/trackedProducts`);
+      const snapshot = await productsRef.get();
+      snapshot.forEach(doc => {
+        const product = doc.data();
+        const listItem = document.createElement('li');
+        listItem.textContent = `${product.productName} - Current Price: €${product.currentPrice}`;
+        productList.appendChild(listItem);
+        renderChart(product.priceHistory);
+      });
+    }
+
+    function renderChart(priceHistory) {
+      const labels = priceHistory.map(entry => entry.date);
+      const prices = priceHistory.map(entry => entry.price);
+
+      const ctx = document.getElementById("priceChart").getContext("2d");
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Price History",
+            data: prices,
+            borderColor: "blue",
+            fill: false
+          }]
+        },
+        options: {
+          scales: {
+            x: { title: { display: true, text: "Date" } },
+            y: { title: { display: true, text: "Price (€)" } }
+          }
+        }
+      });
     }
   </script>
 </body>

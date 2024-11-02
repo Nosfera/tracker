@@ -2,7 +2,7 @@
 const firebase = require('firebase/app');
 require('firebase/auth');
 require('firebase/firestore');
-const logger = require('./utils/logger');
+require('dotenv').config(); // Load .env variables
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
@@ -13,6 +13,7 @@ const firebaseConfig = {
   appId: process.env.FIREBASE_APP_ID,
 };
 
+// Initialize Firebase
 try {
   firebase.initializeApp(firebaseConfig);
   console.log("Firebase initialized successfully.");
@@ -20,6 +21,7 @@ try {
   console.error("Error initializing Firebase:", error);
 }
 
+// Export Firebase services
 const db = firebase.firestore();
 const auth = firebase.auth();
 

@@ -4,6 +4,7 @@
   "main": "app.js",
   "dependencies": {
     "chartjs-node-canvas": "^4.1.6",
+    "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "firebase": "^11.0.1",
     "firebase-admin": "^11.0.0",
